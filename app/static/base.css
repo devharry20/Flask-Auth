@@ -1,0 +1,20 @@
+.custom-navbar {
+    margin-top: 15px !important;
+    border-radius: 25px;
+    color: white;
+    width: 300px;
+    margin: 0 auto;
+    padding: 15px;
+}
+
+.custom-navbar a {
+    margin-left: 10px;
+}
+
+.custom-navbar a:hover {
+    color: #afafaf;
+}
+
+.container {
+    margin-top: 3rem;
+}

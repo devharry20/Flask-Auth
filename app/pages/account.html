@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %} My Account {% endblock %}
+
+{% block content %}
+<table class="table table-sm">
+    <tbody>
+      <tr>
+        <th scope="row">Registered email</th>
+        <td>{{user.email}}</td>
+      </tr>
+      <tr>
+        <th scope="row">Account name</th>
+        <td>{{user.name}}</td>
+      </tr>
+      <tr>
+        <th scope="row">Account created</th>
+        <td>{{user.created}}</td>
+      </tr>
+    </tbody>
+  </table>
+{% endblock %}
