@@ -9,7 +9,7 @@ views = Blueprint("views", __name__)
 def index():
     return render_template("index.html", user=current_user)
 
-@login_required
 @views.route("/account")
+@login_required
 def account():
     return render_template("account.html", user=current_user)
