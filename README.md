@@ -19,11 +19,8 @@ This is a boilerplate Python Flask app with user authentication, including Googl
 ### Gather Google developer credentials
 
 In order to run this app (will be modular eventually), you will need to [register a Google application](https://console.developers.google.com/apis/credentials) to get your client
-secret and ID
-
-### Create your environment variables
-
-You will need to create a `.env` file in the root directory of the project, including your
+secret and ID.\
+You will then need to create a `.env` file in the root directory of the project, including your
 
 ```
 GOOGLE_CLIENT_ID = "ID"
