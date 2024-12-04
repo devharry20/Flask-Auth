@@ -61,6 +61,7 @@ def google_callback():
         
         user = User.query.filter_by(email=users_email).first()
         if user:
+            flash("An account with this email address is already registered, please login", category="error")
             return redirect(url_for("auth.login"))
         
         session["email"] = users_email
