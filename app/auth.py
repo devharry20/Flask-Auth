@@ -34,6 +34,9 @@ def google_auth():
 def google_callback():
     """A view which is called once a Google user is authenticated"""
     code = request.args.get("code")
+    
+    if not code:
+        return redirect(url_for("views.index"))
 
     token_endpoint = google_provider_cfg["token_endpoint"]
 
