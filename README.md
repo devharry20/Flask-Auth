@@ -22,6 +22,7 @@ In order to run this app you will need to [register a Google application](https:
 secret and ID.\
 In a development environment, set the authorized javascript origins to http://127.0.0.1:5000 and authorized redirect uris to http://127.0.0.1:5000/callback\
 In a production environment, these IPs will need to be modified accordingly\
+\
 You will then need to create a `.env` file in the root directory of the project, including your
 
 ```
