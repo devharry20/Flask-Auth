@@ -14,26 +14,27 @@ from .helpers import create_user
 
 auth = Blueprint("auth", __name__)
 
-@auth.route("/register/google")
-def register_google():
-    """A view which allows the user to register using Google"""
+
+@auth.route("/google/auth")
+def google_auth():
+    """A view which allows the user to login using Google"""
+    global google_provider_cfg
     google_provider_cfg = get_google_provider_cfg()
     authorization_endpoint = google_provider_cfg["authorization_endpoint"]
 
     request_uri = client.prepare_request_uri(
         authorization_endpoint,
-        redirect_uri = request.url_root.rstrip("/") + "/register/google/callback",
+        redirect_uri = request.url_root.rstrip("/") + "/callback",
         scope=["openid", "email", "profile"],
     )
 
     return redirect(request_uri)
 
-@auth.route("/register/google/callback")
+@auth.route("/callback")
 def google_callback():
     """A view which is called once a Google user is authenticated"""
     code = request.args.get("code")
 
-    google_provider_cfg = get_google_provider_cfg()
     token_endpoint = google_provider_cfg["token_endpoint"]
 
     token_url, headers, body = client.prepare_token_request(
@@ -56,16 +57,26 @@ def google_callback():
     userinfo_response = requests.get(uri, headers=headers, data=body)
 
     if userinfo_response.json().get("email_verified"):
+        users_id = userinfo_response.json()["sub"]
         users_email = userinfo_response.json()["email"]
         users_name = userinfo_response.json()["given_name"]
         
         user = User.query.filter_by(email=users_email).first()
         if user:
-            flash("An account with this email address is already registered, please login", category="error")
+            if users_id == user.user_auth:
+                if user.user_auth:
+                    login_user(user)
+                    return redirect(url_for("views.index"))
+                else:
+                    flash("Your account was not created using a Google account, please login with your email and password", category="error")
+            else:
+                flash("Authentication error, please login using the approriate method")
+
             return redirect(url_for("auth.login"))
         
         session["email"] = users_email
         session["name"] = users_name
+        session["id"] = userinfo_response.json()["sub"]
         
         return redirect(url_for("auth.set_password"))
     else:
@@ -77,13 +88,18 @@ def set_password():
     if request.method == "POST":
         users_name = session.get("name")
         users_email = session.get("email")
+        user_id = session.get("id")
         password1 = request.form.get("password2")
         password2 = request.form.get("password2")
 
         if password1 != password2:
             flash("Passwords do not match", category="error")
         else:
-            new_user = create_user(users_email, users_name, password1)
+            user = User.query.filter_by(email=users_email).first()
+            if user:
+                return redirect(url_for("auth.login"))
+            
+            new_user = create_user(users_email, users_name, password1, user_type="google", user_auth=user_id)
             login_user(new_user, remember=True)
 
             return redirect(url_for("views.index"))
@@ -99,6 +115,9 @@ def login():
 
         user = User.query.filter_by(email=email).first()
         if user:
+            if user.user_auth:
+                return redirect(url_for("auth.google_auth"))
+            
             if check_password_hash(user.password, password):
                 login_user(user, remember=True)
                 
@@ -120,13 +139,12 @@ def register():
         password2 = request.form.get("password2")
 
         user = User.query.filter_by(email=email).first()
-
         if user:
             flash("There is already an account with this email. Please login", category="error")
         elif password1 != password2:
             flash("Passwords do not match", category="error")
         else:
-            new_user = create_user(email, name, password1)
+            new_user = create_user(email, name, password1, user_type="local")
             login_user(new_user, remember=True)
             print(f"Created {email} {name}")
             flash("Account created!", category="success")
