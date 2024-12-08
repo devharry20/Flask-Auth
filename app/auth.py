@@ -3,10 +3,10 @@ import json
 import requests
 from flask import Blueprint, render_template, request, flash, redirect, url_for, session
 from flask_login import login_user, login_required, logout_user, current_user
-from werkzeug.security import check_password_hash
+from werkzeug.security import check_password_hash, generate_password_hash
 
 from .models import User
-from . import get_google_provider_cfg, client, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
+from . import get_google_provider_cfg, client, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, db
 from .helpers import create_user
 
 
@@ -69,7 +69,7 @@ def google_callback():
                     login_user(user)
                     return redirect(url_for("views.index"))
                 else:
-                    flash("Your account was not created using a Google account, please login with your email and password", category="error")
+                    flash("Your account was not created using a Google account, please login with your email and password")
             else:
                 flash("Authentication error, please login using the approriate method")
 
@@ -86,6 +86,8 @@ def google_callback():
 @auth.route("/set-password", methods=["GET", "POST"])
 def set_password():
     """A view which allows the user to set their account password, only used for Google registrations"""
+    set_reset = request.args.get("type", "set")
+
     if request.method == "POST":
         users_name = session.get("name")
         users_email = session.get("email")
@@ -94,8 +96,23 @@ def set_password():
         password2 = request.form.get("password2")
 
         if password1 != password2:
-            flash("Passwords do not match", category="error")
+            flash("Passwords do not match")
         else:
+            if set_password == "reset":
+                user = current_user
+                if user is None:
+                    flash("You need to be logged in to change your account password!")
+                    return redirect(url_for("auth.login"))
+            
+                new_password = generate_password_hash(password1, method="pbkdf2:sha256")
+                user.password = new_password
+                db.session.commit()
+
+                logout_user()
+
+                flash("Password successfully changed. Please login")
+                return redirect(url_for("auth.login"))
+
             user = User.query.filter_by(email=users_email).first()
             if user:
                 return redirect(url_for("auth.login"))
@@ -105,7 +122,7 @@ def set_password():
 
             return redirect(url_for("views.index"))
         
-    return render_template("set_password.html", user=current_user)
+    return render_template("set_password.html", user=current_user, type=set_reset)
 
 @auth.route("/login", methods=["GET", "POST"])
 def login():
@@ -124,9 +141,9 @@ def login():
                 
                 return redirect(url_for("views.index"))
             else:
-                flash("Incorrect email or password", category="error")
+                flash("Incorrect email or password")
         else:
-            flash("No account with this email found. Please create an account", category="error")
+            flash("No account with this email found. Please create an account")
         
     return render_template("login.html", user=current_user)
 
@@ -141,9 +158,9 @@ def register():
 
         user = User.query.filter_by(email=email).first()
         if user:
-            flash("There is already an account with this email. Please login", category="error")
+            flash("There is already an account with this email. Please login")
         elif password1 != password2:
-            flash("Passwords do not match", category="error")
+            flash("Passwords do not match")
         else:
             new_user = create_user(email, name, password1, user_type="local")
             login_user(new_user, remember=True)
