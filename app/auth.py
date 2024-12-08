@@ -94,6 +94,7 @@ def set_password():
         user_id = session.get("id")
         password1 = request.form.get("password2")
         password2 = request.form.get("password2")
+        set_password = request.form.get("type")
 
         if password1 != password2:
             flash("Passwords do not match")
