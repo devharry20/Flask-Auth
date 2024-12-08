@@ -8,7 +8,7 @@ from oauthlib.oauth2 import WebApplicationClient
 
 
 db = SQLAlchemy()
-DB_NAME = os.getcwd() + r"\database.db"
+DB_NAME = os.path.join(os.getcwd(), "database.db")
 
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
@@ -22,7 +22,7 @@ def get_google_provider_cfg():
 
 def create_app():
     """Main function to run Flask app and set config"""
-    app = Flask(__name__, template_folder=os.getcwd() + r"\app\pages")
+    app = Flask(__name__, template_folder=os.path.join(os.getcwd(), "app", "pages"))
     app.config["SECRET_KEY"] = "abc123"
     app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{DB_NAME}"
     db.init_app(app)
