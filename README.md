@@ -30,10 +30,16 @@ GOOGLE_CLIENT_ID = "ID"
 GOOGLE_CLIENT_SECRET = "SECRET
 ```
 
-### Run the boilerplate
+### Using docker
 
-`python -m app`
-Access the app on http://127.0.0.1:5000
+Build the container using `docker build -t app .` \
+Run the app using `docker run -d -p 5000:5000 app` \
+Access at http://localhost:5000/
+
+### Without docker
+
+Run the app using `python -m app` \
+Access at http://127.0.0.1:5000
 
 ### File structure
 
